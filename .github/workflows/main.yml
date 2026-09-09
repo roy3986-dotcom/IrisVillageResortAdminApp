@@ -31,6 +31,62 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Enable AndroidX
+        run: |
+          touch "${{ steps.project.outputs.project_dir }}/gradle.properties"
+          grep -qxF "android.useAndroidX=true" "${{ steps.project.outputs.project_dir }}/gradle.properties" || echo "android.useAndroidX=true" >> "${{ steps.project.outputs.project_dir }}/gradle.properties"
+          grep -qxF "android.enableJetifier=true" "${{ steps.project.outputs.project_dir }}/gradle.properties" || echo "android.enableJetifier=true" >> "${{ steps.project.outputs.project_dir }}/gradle.properties"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build Debug APK
+        working-directory: ${{ steps.project.outputs.project_dir }}
+        run: gradle assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: IrisVillageResortAdminAPK
+          path: /tmp/iris-project/**/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: errorname: Build Iris Village Resort APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract Android project
+        run: |
+          mkdir -p /tmp/iris-project
+          unzip -q IrisVillageResortAdminApp.zip -d /tmp/iris-project
+
+      - name: Find project folder
+        id: project
+        run: |
+          PROJECT_DIR=$(find /tmp/iris-project -maxdepth 2 -name settings.gradle -printf '%h\n' | head -1)
+          echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
           - name: Set up Java
   uses: actions/setup-java@v4
   with:
