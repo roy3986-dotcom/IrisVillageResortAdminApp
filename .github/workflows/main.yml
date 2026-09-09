@@ -31,6 +31,21 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+          - name: Set up Java
+  uses: actions/setup-java@v4
+  with:
+    distribution: temurin
+    java-version: '17'
+
+- name: Enable AndroidX
+  run: |
+    touch "${{ steps.project.outputs.project_dir }}/gradle.properties"
+    grep -qxF "android.useAndroidX=true" "${{ steps.project.outputs.project_dir }}/gradle.properties" || echo "android.useAndroidX=true" >> "${{ steps.project.outputs.project_dir }}/gradle.properties"
+    grep -qxF "android.enableJetifier=true" "${{ steps.project.outputs.project_dir }}/gradle.properties" || echo "android.enableJetifier=true" >> "${{ steps.project.outputs.project_dir }}/gradle.properties"
+
+- name: Set up Android SDK
+  uses: android-actions/setup-android@v3
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
